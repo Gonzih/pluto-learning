@@ -6,7 +6,7 @@ using InteractiveUtils
 
 # ╔═╡ 81242c9c-f3d7-11ec-0795-7f3092649d9f
 begin
-	data_url = "https://raw.githubusercontent.com/cryptoratsdev/senate-disclosures/main/2022FD.json"
+	data_url = "https://github.com/cryptoratsdev/senate-disclosures/blob/main/reports/all.json"
 
 	md"""
 	Fetching data from [JSON]($(data_url))
