@@ -14,55 +14,34 @@ macro bind(def, element)
     end
 end
 
-# ╔═╡ 1fadcb40-476b-45b8-a792-f173e84c932b
-using HTTP, JSON, DataFrames, Gadfly, PlutoUI, Dates
+# ╔═╡ 7f1c6da4-5505-4271-956a-807a70dcaa54
+using PlutoUI
 
-# ╔═╡ 81242c9c-f3d7-11ec-0795-7f3092649d9f
-begin
-	data_url = "https://raw.githubusercontent.com/cryptoratsdev/senate-disclosures/main/reports/all.json"
-    local_file = "../reports/senate.json"
-	
-	md"""
-	Fetching data from [JSON]($(data_url))
-	"""
-end
+# ╔═╡ dbf2a69d-d1d3-4d8c-8e7f-cb60263b9f9c
+using Dates, DataFrames, Gadfly
+
+# ╔═╡ a95c4fde-061f-4524-abd1-e2c82e029c2a
+@bind reload_deps Button("Reload")
+
+# ╔═╡ 1fadcb40-476b-45b8-a792-f173e84c932b
+module lib; include("./lib.jl"); end
 
 # ╔═╡ 2ebe30d7-addf-45a2-bd25-6636e6cb444b
 begin
-	r = HTTP.get(data_url)
-	open(local_file, "w") do io
-		write(io, String(r.body))
-	end
-end
+	reload_deps
 
-# ╔═╡ 097a621d-bfea-40f5-a4ce-d8650920ca30
-
-
-# ╔═╡ 4ecfb7a2-d1a1-41f9-a350-3aca11a40fa0
-begin
-	senate_data = JSON.parsefile(local_file)
-	transactions = DataFrame()
-	reports = DataFrame()
-	for r in senate_data["all"]
-		tx = pop!(r, "transactions")
-		for t in tx 
-			t["id"] = r["id"] 
-			append!(transactions, DataFrame(t))
-		end
-		append!(reports, DataFrame(r))
-	end
-	senate_transactions = filter(r -> length(r.ticker) < 5, innerjoin(reports, transactions, on = :id))
+	senate_data = lib.Lib.get_data()
 end
 
 # ╔═╡ 5fce9b13-05b6-407f-9fa3-fddc207b5e7c
 begin
-	unique_tickers = senate_transactions.ticker |> unique |> sort
+	unique_tickers = senate_data.ticker |> unique |> sort
 	@bind current_ticker Select(unique_tickers)
 end
 
 # ╔═╡ 8f516084-bd0d-43fc-bd03-ff342427673f
 begin	
-	crypto_senators = filter(r -> r.ticker == current_ticker, senate_transactions)
+	crypto_senators = filter(r -> r.ticker == current_ticker, senate_data)
 	crypto_senators.date = Date.(crypto_senators.date, "mm/dd/yyyy")
 	tx_by_date = sort(crypto_senators, ["date"])
 end
@@ -70,10 +49,11 @@ end
 # ╔═╡ 7a09de6a-6c3c-478b-9b9f-df3a301a4b35
 begin
 	frequency_df = DataFrame()
-	for g in groupby(senate_transactions, :ticker)
+	for g in groupby(senate_data, :ticker)
 		ticker = first(g).ticker
 		append!(frequency_df, DataFrame(ticker=ticker, count=nrow(g)))
 	end
+	
 	sorted_frequency_df = sort(frequency_df, ["count"], rev=true)
 end
 
@@ -83,156 +63,17 @@ begin
 	plot(top20, y=:count, color=:ticker, Geom.bar)
 end
 
-# ╔═╡ 2d4e89fc-e863-4712-8ae8-4dd162b9f913
-
-
-# ╔═╡ f9437187-a0a9-4238-a0df-70a02912dadc
-
-
-# ╔═╡ 6a28fd48-d468-44dd-b486-d307dce9307a
-
-
-# ╔═╡ 4a216721-a5e6-41a4-a695-c1c6443ca4ae
-
-
-# ╔═╡ a57359d4-71b2-409b-9047-c84416fe6b73
-
-
-# ╔═╡ 3f5393d5-05e0-4246-9f70-04b425554290
-
-
-# ╔═╡ 8281ea96-a535-4fb6-b7ee-3d5af222b3da
-
-
-# ╔═╡ 62f85a50-b4bd-43c8-964f-ae50a52dedb7
-
-
-# ╔═╡ 58f4f417-7f00-42ab-9fbe-0f96d4364f4d
-
-
-# ╔═╡ b54de252-8558-406d-ac0f-45163ef38d93
-
-
-# ╔═╡ bedbe48c-781d-453d-bdbd-07ad56581395
-
-
-# ╔═╡ 122b08d0-85d6-4511-8172-bd66c29c8a78
-
-
-# ╔═╡ ac3cfad3-10bb-481f-b7ff-e200d880ba5e
-
-
-# ╔═╡ 8aa7c2fb-2cdc-426d-8c82-9495aaa5830f
-
-
-# ╔═╡ b21a1b79-6d8e-45d5-8d2f-548932e6969e
-
-
-# ╔═╡ f09c5cec-c037-4e4a-8505-659803ec912d
-
-
-# ╔═╡ 64062c62-7bd6-4b7a-9ee4-dfc3c88988c4
-
-
-# ╔═╡ a77c0ad5-466e-4777-b773-f7bacec65418
-
-
-# ╔═╡ 8e0a33bb-541f-4a9a-a7b7-08ef610146b0
-
-
-# ╔═╡ 7ca17594-131d-4412-89dd-3895326c79fd
-
-
-# ╔═╡ 42a4a5fa-0fb2-4e2e-9cc1-d231ab959882
-
-
-# ╔═╡ 816310e5-6c20-4634-83be-57e13bce0e8e
-
-
-# ╔═╡ ac915964-869c-461a-8e50-9289066bbe3c
-
-
-# ╔═╡ fb84308a-b7eb-402b-998e-0f57121a30fe
-
-
-# ╔═╡ cfd16fd9-c86a-4034-914d-b66551163e19
-
-
-# ╔═╡ cbb56127-37d7-42dc-bb84-8e7b58236002
-
-
-# ╔═╡ b2977e13-83f4-4d4f-9eba-2aaa78d3b3d2
-
-
-# ╔═╡ 5495c0d2-96c0-4184-a445-8016bf7b8938
-
-
-# ╔═╡ e167a270-52da-49a2-8a73-2e77b1d5dbd9
-
-
-# ╔═╡ 33dc5ed2-2de2-475d-93b1-7d56a8635690
-
-
-# ╔═╡ fe733236-409d-49a3-9a04-62c17876dc94
-
-
-# ╔═╡ e76d3c1f-8b71-4c97-8c25-fd3b313889c1
-
-
-# ╔═╡ 7dcaa3e0-eacc-4ebd-a14a-e78819aba626
-
-
-# ╔═╡ ce2912e4-4297-40bb-be96-65be511d4c9d
-
-
-# ╔═╡ 10cdca13-0954-40fa-88bc-4a7023b117fa
-
-
-# ╔═╡ 4be3b743-afec-4436-91e7-a84c6d747814
-
-
-# ╔═╡ 157ab14f-1be3-4abe-93a1-2c308bf2452a
-
-
-# ╔═╡ f701ccef-f309-447b-926d-c57eb1bfbb2e
-
-
-# ╔═╡ abe54086-82e2-427b-9824-60338b85206a
-
-
-# ╔═╡ 9edfde41-51b1-4e4d-9442-b5ebdadf0cde
-
-
-# ╔═╡ f7296115-bff5-4c97-828e-25e350d35ac1
-
-
-# ╔═╡ 9c77d3eb-7496-486a-a0e6-480021acf8a9
-
-
-# ╔═╡ 345e20ed-cd67-4842-8206-95d702ef9f70
-
-
-# ╔═╡ 050872b8-d18d-4998-8487-463db06c8625
-
-
-# ╔═╡ 1977010a-23d5-41cc-ba4f-6a640936e74d
-
-
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
 [deps]
 DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
 Dates = "ade2ca70-3891-5945-98fb-dc099432e06a"
 Gadfly = "c91e804a-d5a3-530f-b6f0-dfbca275c004"
-HTTP = "cd3eb016-35fb-5094-929b-558a96fad6f3"
-JSON = "682c06a0-de6a-54ab-a142-c8b1cf79cde6"
 PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
 
 [compat]
 DataFrames = "~1.3.4"
 Gadfly = "~1.3.4"
-HTTP = "~1.0.5"
-JSON = "~0.21.3"
 PlutoUI = "~0.7.39"
 """
 
@@ -299,12 +140,6 @@ deps = ["ChainRulesCore", "LinearAlgebra", "Test"]
 git-tree-sha1 = "1e315e3f4b0b7ce40feded39c73049692126cf53"
 uuid = "9e997f8a-9a97-42d5-a9f1-ce6bfc15e2c0"
 version = "0.1.3"
-
-[[deps.CodecZlib]]
-deps = ["TranscodingStreams", "Zlib_jll"]
-git-tree-sha1 = "ded953804d019afa9a3f98981d99b33e3db7b6da"
-uuid = "944b1d66-785c-5afd-91f1-9de20f533193"
-version = "0.7.0"
 
 [[deps.ColorTypes]]
 deps = ["FixedPointNumbers", "Random"]
@@ -467,12 +302,6 @@ git-tree-sha1 = "53bb909d1151e57e2484c3d1b53e19552b887fb2"
 uuid = "42e2da0e-8278-4e71-bc24-59509adca0fe"
 version = "1.0.2"
 
-[[deps.HTTP]]
-deps = ["Base64", "CodecZlib", "Dates", "IniFile", "Logging", "LoggingExtras", "MbedTLS", "NetworkOptions", "Random", "SimpleBufferStream", "Sockets", "URIs", "UUIDs"]
-git-tree-sha1 = "bd11d3220f89382f3116ed34c92badaa567239c9"
-uuid = "cd3eb016-35fb-5094-929b-558a96fad6f3"
-version = "1.0.5"
-
 [[deps.Hexagons]]
 deps = ["Test"]
 git-tree-sha1 = "de4a6f9e7c4710ced6838ca906f81905f7385fd6"
@@ -507,11 +336,6 @@ version = "0.2.2"
 git-tree-sha1 = "012e604e1c7458645cb8b436f8fba789a51b257f"
 uuid = "9b13fd28-a010-5f03-acff-a1bbcff69959"
 version = "1.0.0"
-
-[[deps.IniFile]]
-git-tree-sha1 = "f550e6e32074c939295eb5ea6de31849ac2c9625"
-uuid = "83e8ac13-25f8-5344-8a64-a9f2b223428f"
-version = "0.5.1"
 
 [[deps.IntelOpenMP_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
@@ -621,12 +445,6 @@ version = "0.3.15"
 [[deps.Logging]]
 uuid = "56ddb016-857b-54e1-b83d-db4d58db5568"
 
-[[deps.LoggingExtras]]
-deps = ["Dates", "Logging"]
-git-tree-sha1 = "5d4d2d9904227b8bd66386c1138cf4d5ffa826bf"
-uuid = "e6f89c97-d47a-5376-807f-9c37f3926c36"
-version = "0.4.9"
-
 [[deps.MKL_jll]]
 deps = ["Artifacts", "IntelOpenMP_jll", "JLLWrappers", "LazyArtifacts", "Libdl", "Pkg"]
 git-tree-sha1 = "e595b205efd49508358f7dc670a940c790204629"
@@ -642,12 +460,6 @@ version = "0.5.9"
 [[deps.Markdown]]
 deps = ["Base64"]
 uuid = "d6f4376e-aef5-505a-96c1-9c027394607a"
-
-[[deps.MbedTLS]]
-deps = ["Dates", "MbedTLS_jll", "Random", "Sockets"]
-git-tree-sha1 = "1c38e51c3d08ef2278062ebceade0e46cefc96fe"
-uuid = "739be429-bea8-5141-9913-cc70e7f3736d"
-version = "1.0.3"
 
 [[deps.MbedTLS_jll]]
 deps = ["Artifacts", "Libdl"]
@@ -816,11 +628,6 @@ git-tree-sha1 = "91eddf657aca81df9ae6ceb20b959ae5653ad1de"
 uuid = "992d4aef-0814-514b-bc4d-f2e9a6c4116f"
 version = "1.0.3"
 
-[[deps.SimpleBufferStream]]
-git-tree-sha1 = "874e8867b33a00e784c8a7e4b60afe9e037b74e1"
-uuid = "777ac1f9-54b0-4bf8-805c-2214025038e7"
-version = "1.1.0"
-
 [[deps.Sockets]]
 uuid = "6462fe0b-24de-5631-8697-dd941f90decc"
 
@@ -901,21 +708,10 @@ uuid = "a4e569a6-e804-4fa4-b0f3-eef7a1d5b13e"
 deps = ["InteractiveUtils", "Logging", "Random", "Serialization"]
 uuid = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
-[[deps.TranscodingStreams]]
-deps = ["Random", "Test"]
-git-tree-sha1 = "216b95ea110b5972db65aa90f88d8d89dcb8851c"
-uuid = "3bb67fe8-82b1-5028-8e26-92a6c54297fa"
-version = "0.9.6"
-
 [[deps.Tricks]]
 git-tree-sha1 = "6bac775f2d42a611cdfcd1fb217ee719630c4175"
 uuid = "410a4b4d-49e4-4fbc-ab6d-cb71b17b3775"
 version = "0.1.6"
-
-[[deps.URIs]]
-git-tree-sha1 = "97bbe755a53fe859669cd907f2d96aee8d2c1355"
-uuid = "5c2747f8-b7ea-4ff2-ba2e-563bfd36b1d4"
-version = "1.3.0"
 
 [[deps.UUIDs]]
 deps = ["Random", "SHA"]
@@ -948,59 +744,14 @@ uuid = "3f19e933-33d8-53b3-aaab-bd5110c3b7a0"
 """
 
 # ╔═╡ Cell order:
-# ╠═81242c9c-f3d7-11ec-0795-7f3092649d9f
+# ╟─7f1c6da4-5505-4271-956a-807a70dcaa54
+# ╟─a95c4fde-061f-4524-abd1-e2c82e029c2a
 # ╠═1fadcb40-476b-45b8-a792-f173e84c932b
+# ╠═dbf2a69d-d1d3-4d8c-8e7f-cb60263b9f9c
 # ╠═2ebe30d7-addf-45a2-bd25-6636e6cb444b
-# ╠═097a621d-bfea-40f5-a4ce-d8650920ca30
-# ╠═4ecfb7a2-d1a1-41f9-a350-3aca11a40fa0
 # ╠═5fce9b13-05b6-407f-9fa3-fddc207b5e7c
 # ╠═8f516084-bd0d-43fc-bd03-ff342427673f
 # ╠═7a09de6a-6c3c-478b-9b9f-df3a301a4b35
 # ╠═543571f7-941f-41ea-a7d4-15d99b41cfeb
-# ╠═2d4e89fc-e863-4712-8ae8-4dd162b9f913
-# ╠═f9437187-a0a9-4238-a0df-70a02912dadc
-# ╠═6a28fd48-d468-44dd-b486-d307dce9307a
-# ╠═4a216721-a5e6-41a4-a695-c1c6443ca4ae
-# ╠═a57359d4-71b2-409b-9047-c84416fe6b73
-# ╠═3f5393d5-05e0-4246-9f70-04b425554290
-# ╠═8281ea96-a535-4fb6-b7ee-3d5af222b3da
-# ╠═62f85a50-b4bd-43c8-964f-ae50a52dedb7
-# ╠═58f4f417-7f00-42ab-9fbe-0f96d4364f4d
-# ╠═b54de252-8558-406d-ac0f-45163ef38d93
-# ╠═bedbe48c-781d-453d-bdbd-07ad56581395
-# ╠═122b08d0-85d6-4511-8172-bd66c29c8a78
-# ╠═ac3cfad3-10bb-481f-b7ff-e200d880ba5e
-# ╠═8aa7c2fb-2cdc-426d-8c82-9495aaa5830f
-# ╠═b21a1b79-6d8e-45d5-8d2f-548932e6969e
-# ╠═f09c5cec-c037-4e4a-8505-659803ec912d
-# ╠═64062c62-7bd6-4b7a-9ee4-dfc3c88988c4
-# ╠═a77c0ad5-466e-4777-b773-f7bacec65418
-# ╠═8e0a33bb-541f-4a9a-a7b7-08ef610146b0
-# ╠═7ca17594-131d-4412-89dd-3895326c79fd
-# ╠═42a4a5fa-0fb2-4e2e-9cc1-d231ab959882
-# ╠═816310e5-6c20-4634-83be-57e13bce0e8e
-# ╠═ac915964-869c-461a-8e50-9289066bbe3c
-# ╠═fb84308a-b7eb-402b-998e-0f57121a30fe
-# ╠═cfd16fd9-c86a-4034-914d-b66551163e19
-# ╠═cbb56127-37d7-42dc-bb84-8e7b58236002
-# ╠═b2977e13-83f4-4d4f-9eba-2aaa78d3b3d2
-# ╠═5495c0d2-96c0-4184-a445-8016bf7b8938
-# ╠═e167a270-52da-49a2-8a73-2e77b1d5dbd9
-# ╠═33dc5ed2-2de2-475d-93b1-7d56a8635690
-# ╠═fe733236-409d-49a3-9a04-62c17876dc94
-# ╠═e76d3c1f-8b71-4c97-8c25-fd3b313889c1
-# ╠═7dcaa3e0-eacc-4ebd-a14a-e78819aba626
-# ╠═ce2912e4-4297-40bb-be96-65be511d4c9d
-# ╠═10cdca13-0954-40fa-88bc-4a7023b117fa
-# ╠═4be3b743-afec-4436-91e7-a84c6d747814
-# ╠═157ab14f-1be3-4abe-93a1-2c308bf2452a
-# ╠═f701ccef-f309-447b-926d-c57eb1bfbb2e
-# ╠═abe54086-82e2-427b-9824-60338b85206a
-# ╠═9edfde41-51b1-4e4d-9442-b5ebdadf0cde
-# ╠═f7296115-bff5-4c97-828e-25e350d35ac1
-# ╠═9c77d3eb-7496-486a-a0e6-480021acf8a9
-# ╠═345e20ed-cd67-4842-8206-95d702ef9f70
-# ╠═050872b8-d18d-4998-8487-463db06c8625
-# ╠═1977010a-23d5-41cc-ba4f-6a640936e74d
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
